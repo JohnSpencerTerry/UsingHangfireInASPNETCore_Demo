@@ -1,0 +1,17 @@
+﻿@page "/DayViewTodoList/{listdate:datetime}"
+
+@using UsingHangfireInASPNETCore_Demo.Data
+
+@inject TodoItemService ForecastService
+
+<h3>todolist</h3>
+
+@code {
+
+    [Parameter]
+    public DateTime ListDate { get; set; }
+
+    private List<TodoItem> todoItems;
+
+
+}
