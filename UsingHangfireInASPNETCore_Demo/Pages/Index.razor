@@ -1,7 +1,11 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+<p>This is the photo app - click on "My Photos" or "Add Photos"</p>
 
-Welcome to your new app.
-
-<SurveyPrompt Title="How is Blazor working for you?" />
+<p>You can upload a photo under Add Photo - the system will: </p>
+<ol>
+    <li> Do a md5 hash to ensure the photo wasn't already uploaded</li>
+    <li> Upload the photo to our Azure Blob Storage account</li>
+    <li> Save a record to the OriginalImage table that has link to the logged in user. </li>
+    <li> Create at least one permutation of the uploaded photo using a hangfire process. </li>
+</ol>

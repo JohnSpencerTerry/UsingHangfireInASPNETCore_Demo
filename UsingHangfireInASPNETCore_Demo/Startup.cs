@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Builder;
@@ -17,6 +18,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UsingHangfireInASPNETCore_Demo.Areas.Identity;
 using UsingHangfireInASPNETCore_Demo.Data;
+using UsingHangfireInASPNETCore_Demo.Services;
 
 namespace UsingHangfireInASPNETCore_Demo
 {
@@ -36,6 +38,8 @@ namespace UsingHangfireInASPNETCore_Demo
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
+
+
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
@@ -59,10 +63,13 @@ namespace UsingHangfireInASPNETCore_Demo
 
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 
-            services.AddScoped<TodoItemService>();
-            services.AddSingleton<WeatherForecastService>();
+            services.AddSingleton(x => new BlobServiceClient(Configuration.GetConnectionString("BlobStorage")));
+
+            services.AddScoped<BlobStorageService>();
+            services.AddScoped<ImageService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -94,6 +101,10 @@ namespace UsingHangfireInASPNETCore_Demo
             // quick fire and forget 
             backgroundJobs.Enqueue(() => Console.WriteLine("Hello world from Hangfire!"));
 
+            /*
+              we want to enqueue a job here that ensures the checks that the "OriginalImages" container exists so we can let users upload images
+             */
+            backgroundJobs.Enqueue<BlobStorageService>((x) => x.CreateContainerIfNotExists("OriginalImages"));
 
             app.UseEndpoints(endpoints =>
             {

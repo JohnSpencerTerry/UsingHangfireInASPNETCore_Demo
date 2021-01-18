@@ -1,0 +1,68 @@
+﻿@page "/addphotos"
+
+@*https://docs.microsoft.com/en-us/aspnet/core/blazor/security/?view=aspnetcore-5.0#authorize-attribute*@
+@attribute [Authorize]
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using UsingHangfireInASPNETCore_Demo.Services
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ImageService imageService
+
+<h3>Add Photos</h3>
+
+
+
+
+<div class="drag-drop-zone">
+    @*  since this is .NET 3.1, the InputFile component doesn't exist and needs to be imported
+        Install-Package BlazorInputFile
+    *@
+    <InputFile OnChange="@OnInputFileChange" />
+</div>
+
+
+<p>@status</p>
+
+@code {
+    private IList<string> imageDataUrls = new List<string>();
+    private string status;
+
+    private string aspNetUserID;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            aspNetUserID = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        }
+    }
+
+    private async Task OnInputFileChange(IFileListEntry[] files)
+    {
+        var format = "image/png";
+
+        foreach (var file in files)
+        {
+            // Just load into .NET memory to show it can be done
+            // Alternatively it could be saved to disk, or parsed in memory, or similar
+            var ms = new MemoryStream();
+
+            await file.Data.CopyToAsync(ms);
+
+            status = $"Finished loading {file.Size} bytes from {file.Name}";
+
+
+            var imageDataUrl =
+                $"data:{format};base64,{Convert.ToBase64String(ms.ToArray())}";
+
+            imageDataUrls.Add(imageDataUrl);
+
+            await imageService.UploadAndProcessImageAsync(file.Name, ms);
+        }
+    }
+}

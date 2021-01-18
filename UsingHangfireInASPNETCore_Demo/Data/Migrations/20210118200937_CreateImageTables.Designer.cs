@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UsingHangfireInASPNETCore_Demo.Data;
 
 namespace UsingHangfireInASPNETCore_Demo.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210118200937_CreateImageTables")]
+    partial class CreateImageTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -235,9 +237,6 @@ namespace UsingHangfireInASPNETCore_Demo.Data.Migrations
                     b.Property<string>("FileName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("MD5Hash")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("OrginalImageId")
                         .HasColumnType("int");
 
@@ -270,13 +269,7 @@ namespace UsingHangfireInASPNETCore_Demo.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DisplayName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("FileName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MD5Hash")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
