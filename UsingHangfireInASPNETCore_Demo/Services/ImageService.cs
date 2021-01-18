@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +9,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using UsingHangfireInASPNETCore_Demo.Data;
+using UsingHangfireInASPNETCore_Demo.Models;
 
 namespace UsingHangfireInASPNETCore_Demo.Services
 {
@@ -29,15 +31,7 @@ namespace UsingHangfireInASPNETCore_Demo.Services
 
         public async Task UploadAndProcessImageAsync(string fileName, MemoryStream stream)
         {
-            var authState = await this.authenticationStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-
-            if (!user.Identity.IsAuthenticated)
-            {
-                
-            }
-
-            var aspNetUserID = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            string aspNetUserID = await GetUserID();
 
             string uniqueFileName = $"{Guid.NewGuid()}{fileName}";
 
@@ -45,7 +39,7 @@ namespace UsingHangfireInASPNETCore_Demo.Services
             MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider();
             string md5ByteString = System.Text.Encoding.Default.GetString(md5.ComputeHash(stream));
 
-            if(this.dbContext.OriginalImages.Any(x => x.MD5Hash == md5ByteString))
+            if (this.dbContext.OriginalImages.Any(x => x.MD5Hash == md5ByteString))
             {
                 // do something
             }
@@ -71,5 +65,54 @@ namespace UsingHangfireInASPNETCore_Demo.Services
         }
 
 
+
+        public async Task<List<ImageData>> GetImages()
+        {
+            string aspNetUserID = await GetUserID();
+
+            var originalImagesQuery = this.dbContext.OriginalImages
+                .Include(x => x.ImageVariants)
+                .Where(x => x.AspNetUserID == aspNetUserID);
+
+            var images = new List<ImageData>();
+
+            foreach (var image in originalImagesQuery)
+            {
+                var imageData = new ImageData { 
+                    DisplayName = image.DisplayName,
+                    Container = image.ContainerOrDirectory,
+                    FileName = image.FileName,
+                    ImageType = "Original"
+                };
+
+                foreach (var imageVariant in image.ImageVariants)
+                {
+                    imageData.Variants.Add(new ImageData
+                    {
+                        Container = imageVariant.ContainerOrDirectory,
+                        FileName = imageVariant.FileName,
+                        ImageType = imageVariant.VariantDescription
+                    });
+                }
+
+                images.Add(imageData);
+            }
+
+            return images;
+        }
+
+        private async Task<string> GetUserID()
+        {
+            var authState = await this.authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity.IsAuthenticated)
+            {
+
+            }
+
+            var aspNetUserID = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            return aspNetUserID;
+        }
     }
 }

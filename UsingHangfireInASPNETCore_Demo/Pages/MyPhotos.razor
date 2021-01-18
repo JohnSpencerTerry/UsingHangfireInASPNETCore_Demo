@@ -1,14 +1,25 @@
 ﻿@page "/myphotos"
-
+@*https://docs.microsoft.com/en-us/aspnet/core/blazor/security/?view=aspnetcore-5.0#authorize-attribute*@
 @attribute [Authorize]
+
+
+@using UsingHangfireInASPNETCore_Demo.Services
+@using UsingHangfireInASPNETCore_Demo.Models
+
+@inject ImageService imageService
 
 <h3>MyPhotos</h3>
 
+@foreach (var item in images)
+{
+    <p>@item.DisplayName</p>
+}
+
 @code {
-    //private WeatherForecast[] forecasts;
+    private List<ImageData> images;
 
     protected override async Task OnInitializedAsync()
     {
-        // forecasts = await ForecastService.GetForecastAsync(DateTime.Now);
+        images = await imageService.GetImages();
     }
 }
